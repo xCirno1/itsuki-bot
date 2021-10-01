@@ -6,9 +6,7 @@ import sqlite3
 from discord.ext import commands
 from ext.context import Context
 
-intents = discord.Intents.default()
-intents.members = True
-intents.reactions = True
+intents = discord.Intents.all()
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger('discord')
