@@ -28,7 +28,7 @@ class MyHelp(commands.HelpCommand):
         cmds = qualify_command(self)
         embed = discord.Embed(title="Help command!",
                               description="All commands that are accessible are shown below!",
-                              colour=0xff6666
+                              color=self.context.bot.base_color
                               )
         for k, v in cmds.items():
             embed.add_field(name=k, value=' '.join(v))
@@ -45,7 +45,10 @@ class MyHelp(commands.HelpCommand):
     async def send_command_help(self, command: commands.Command) -> Coroutine:
         """Sends command's specific help message."""
         _to = self.get_destination()
-        embed = discord.Embed(title=f"Displaying command: {command.name}", description=command.callback.__doc__ if command.callback.__doc__ else "No description for this command currently.", colour=0xff6666)
+        base_description = "No description for this command currently."
+        embed = discord.Embed(title=f"Displaying command: {command.name}",
+                              description=command.callback.__doc__ if command.callback.__doc__ else base_description,
+                              color=self.context.bot.base_color)
         if command.aliases:
             embed.add_field(name="Aliases", value=', '.join(command.aliases))
         if command.signature:
@@ -57,7 +60,9 @@ class MyHelp(commands.HelpCommand):
     async def send_cog_help(self, cog: commands.Cog) -> Coroutine:
         """Sends cog/category specific help message."""
         embed = discord.Embed(title=f"Displaying Category: {cog.qualified_name}",
-                              description=f"{cog.description}\n\nCommands: {cog.get_commands()}")
+                              description=f"{cog.description}\n\n"
+                                          f"Commands: {[command.name for command in cog.get_commands()]}",
+                              color=self.context.bot.base_color)
         _to = self.get_destination()
         return await _to.send(embed=embed)
 

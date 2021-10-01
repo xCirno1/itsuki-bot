@@ -3,7 +3,7 @@ import asyncio
 import sqlite3
 import discord
 
-from typing import Union, Tuple, Any, TYPE_CHECKING, List, Optional
+from typing import Union, Tuple, Any, TYPE_CHECKING, List, Optional, TypeVar
 from datetime import datetime
 from discord.ext import commands, tasks
 from enums import Members, Channels, ClanOwners
@@ -16,6 +16,8 @@ if TYPE_CHECKING:
 
 db: "Connection" = sqlite3.connect("donation.db", timeout=10)
 cur: "Cursor" = db.cursor()
+
+T = TypeVar("T", bound=discord.Member)
 
 ignore("CREATE TABLE IF NOT EXISTS data(id INTEGER PRIMARY KEY AUTOINCREMENT, "
        "acc_id INT, times_donated INT, donation_value INT, donation_streak INT, "
@@ -121,7 +123,7 @@ class DonationCog(commands.Cog, name="Clan Donation"):
         try:
             await self.bot.wait_until_ready()
             print(datetime.utcnow())
-            if datetime.utcnow().strftime("%H:%M") == "04:03":
+            if datetime.utcnow().strftime("%H:%M") == "00:00":
                 self.cur.execute("SELECT acc_id FROM data")
                 ti: List[Tuple[int, ...]] = self.cur.fetchall()
                 ids: List[int, ...] = [t[0] for t in ti]
@@ -138,7 +140,7 @@ class DonationCog(commands.Cog, name="Clan Donation"):
                     if donation_today == 0:  # did not donate
                         cls.add("not_donate_days", 1)
                         cls.set("donation_streak", 0)
-                        user: discord.User = self.bot.get_user(1)
+                        user: discord.User = self.bot.get_user(d)
                         base_message: str = f"Hi, it seems you haven't donated for {cls.not_donate_days} days."
                         if cls.not_donate_days == 2:  # did not donate 2 days
                             await user.send(f"{base_message}!\n_4 days is the maximum days you don't donate._")
@@ -159,12 +161,13 @@ class DonationCog(commands.Cog, name="Clan Donation"):
         except Exception as e:
             with open("debug.txt", "a") as f:
                 f.write('\n' + str(e) + '\n')
+            raise e
 
     @commands.command()
-    async def invite(self, ctx: Context, member: discord.Member) -> Optional[discord.Message]:
+    async def invite(self, ctx: Context, member: Union[T, List[T]]) -> Optional[discord.Message]:
         """Invite a user to be added to database."""
         self.cur.execute("SELECT acc_id FROM data WHERE acc_id = ?", (member.id,))
-        res: Tuple[Union[int, None]] = self.cur.fetchone()
+        res: Tuple[Optional[int]] = self.cur.fetchone()
         try:
             if member.id in res:
                 return await ctx.send("It seems that this member exists already in database!")
