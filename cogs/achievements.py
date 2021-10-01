@@ -177,22 +177,6 @@ class Achievements(commands.Cog):
                     if message.content:
                         pass
 
-    @commands.command(hidden=True)
-    @cancel_long_invoke()
-    async def refresh(self, ctx):
-        # cur.execute("ALTER TABLE achievements ADD message_deleted TEXT")
-        cur.execute("UPDATE achievements SET level_count=0")
-        cur.execute("UPDATE progress SET maxed_out=1")
-        # cur.execute("ALTER TABLE progress DROP happy_messaging")
-        # cur.execute("ALTER TABLE achievements ADD level_count INT")
-        # cur.execute("ALTER TABLE progress ADD maxed_out INT")
-        # cur.execute("DROP TABLE achievements")
-        # cur.execute("DROP TABLE progress")
-        # cur.execute(f"SELECT message_deleted FROM achievements WHERE acc_id = 650447110402998302")
-        # print(cur.fetchone())
-        con.commit()
-        await ctx.send("Refreshed!")
-
 
 class AchievementCommand(commands.Cog):
     def __init__(self, bot):
