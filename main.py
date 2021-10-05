@@ -35,7 +35,7 @@ class BotBase(commands.Bot):
         loaded: Generator = self.load_extension([f"cogs.{file[:-3]}"for file in os.listdir("cogs")
                                                  if file.endswith(".py") and not file.startswith("_")])
         fl = [cog for cog in loaded]
-        self.log.info(f"Finished loading {len(fl)} cogs: {fl}")
+        self.log.info("Finished loading %r cogs: %r", len(fl), fl,)
         await super().start(*args, **kwargs)
 
     async def close(self):
