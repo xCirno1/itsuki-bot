@@ -229,7 +229,8 @@ class DonationCog(commands.Cog, name="Clan Donation"):
                 try:
                     await message.author.send(embed=embed)
                 except (discord.Forbidden, discord.HTTPException):
-                    reply: discord.Message = await message.reply(content="Unable to send dm but don't worry, your data is saved!")
+                    reply: discord.Message = await message.reply(content="Unable to send dm but don't worry,"
+                                                                         " your data is saved!")
                     await asyncio.sleep(10)
                     await reply.delete()
             except asyncio.TimeoutError:

@@ -1,5 +1,6 @@
 import discord
 import inspect
+import asyncio
 
 from discord.ext import commands
 from ext.decorators import cancel_long_invoke
@@ -29,7 +30,11 @@ class Info(commands.Cog, name="Info"):
             r = eval(query).__doc__.replace("|coro|", "This function is a [coroutine.](https://docs.python.org/3/library/asyncio-task.html#coroutine)").replace(":class:", "") if eval(query).__doc__ is not None else "None"
             e = r[:400] + "..."
             url = "ext/commands/" if 'commands' in query else "ext/tasks/"
-            await ctx.send(embed=discord.Embed(title=query, url=f"https://discordpy.readthedocs.io/en/stable/{'' if 'commands' not in query and 'tasks' not in query else url}{'index' if 'tasks' in query else 'api'}.html#{remove(query, '.discord') if inspect.isclass(query) else query if 'discord' in query else 'discord.ext.' + query}", description=f"```py\n{query.split('.')[-1]}{inspect.signature(eval(query))}```\n{(e.split(f'Attributes{newline}')[0]).replace('`.', f'`{dot.join(query.split(dot)[2:-1]) + dot}').split(f'Parameters{newline}')[0].replace(':meth:`', f'`{query.split(dot)[-2] + dot}').replace('..', '').replace('::', ':').replace('versionadded', 'Version added')}", color=0x00FFFF))
+            await ctx.send(embed=discord.Embed(title=query,
+                                               url=f"https://discordpy.readthedocs.io/en/stable/"
+                                                   f"{'' if 'commands' not in query and 'tasks' not in query else url}{'index' if 'tasks' in query else 'api'}.html#{remove(query, '.discord') if inspect.isclass(query) else query if 'discord' in query else 'discord.ext.' + query}",
+                                               description=f"```py\n{query.split('.')[-1]}{inspect.signature(eval(query))}```\n{(e.split(f'Attributes{newline}')[0]).replace('`.', f'`{dot.join(query.split(dot)[2:-1]) + dot}').split(f'Parameters{newline}')[0].replace(':meth:`', f'`{query.split(dot)[-2] + dot}').replace('..', '').replace('::', ':').replace('versionadded', 'Version added')}",
+                                               color=self.bot.base_color))
         except AttributeError:
             await ctx.send("No documentation found!")
         except TypeError:
