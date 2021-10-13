@@ -1,6 +1,5 @@
 import discord
 import inspect
-import asyncio
 
 from discord.ext import commands
 from ext.decorators import cancel_long_invoke

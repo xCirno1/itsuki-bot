@@ -1,8 +1,10 @@
 import discord
 
 from discord.ext import commands
-from ext.context import Context
 from typing import Optional
+
+from ext.context import Context
+
 
 BASE_REASON: str = "No Reason Provided."
 

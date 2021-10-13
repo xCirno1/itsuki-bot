@@ -1,5 +1,6 @@
-from ext.context import Context
 from discord.ext import commands
+
+from ext.context import Context
 
 
 class Listeners(commands.Cog):

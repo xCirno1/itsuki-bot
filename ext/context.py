@@ -30,6 +30,7 @@ class Context(commands.Context):
             if str(r.emoji) == "✅":
                 return True
             elif str(r.emoji) == "❌":
+                await message.clear_reactions()
                 return False
 
     async def send_trash(self, message: discord.Message = None, timeout: int = None):

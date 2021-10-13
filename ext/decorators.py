@@ -1,7 +1,7 @@
 import asyncio
-import functools
-import enums
 import discord
+import enums
+import functools
 
 from discord.ext.commands import Context
 
