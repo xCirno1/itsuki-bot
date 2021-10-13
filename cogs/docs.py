@@ -1,8 +1,14 @@
 import discord
+import contextlib
 import inspect
+import io
+import textwrap
+import traceback
 
 from discord.ext import commands
-from ext.decorators import cancel_long_invoke
+
+from enums import ClanOwners
+from ext.decorators import cancel_long_invoke, check_access
 from ext.utils import remove
 
 
@@ -38,6 +44,34 @@ class Info(commands.Cog, name="Info"):
             await ctx.send("No documentation found!")
         except TypeError:
             await ctx.send("This attribute/module exists but doesn't seem to have any explanation.")
+
+    @commands.command(aliases=["eval"])
+    @check_access(ClanOwners)
+    async def e(self, ctx, *, code):
+        code = code.replace("```")
+        if code.startswith("py"):
+            code = code[2:]
+        default = {
+            "discord": discord,
+            "commands": commands,
+            "bot": self.bot,
+            "ctx": ctx,
+        }
+
+        stdout = io.StringIO()
+
+        try:
+            with contextlib.redirect_stdout(stdout):
+                exec(
+                    f"async def sandbox():\n{textwrap.indent(code, '    ')}", default,
+                )
+                await default.get("sandbox", None)()
+                result = f"```py\n{stdout.getvalue()}```"
+
+        except Exception as e:
+            result = "```py\n" + "".join(traceback.format_exception(e, e, e.__traceback__)) + "```"
+        if result != "```py\n```":
+            await ctx.send(embed=discord.Embed(description=result))
 
 
 def setup(bot):
