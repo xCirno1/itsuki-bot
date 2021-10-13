@@ -12,6 +12,8 @@ def qualify_command(self) -> Dict[str, List[str]]:
     """
     command_qualify_dict = {}
     for command in self.context.bot.commands:
+        if command.hidden:
+            continue
         cog = command.cog_name if command.cog_name is not None else "No Category"
         if cog not in command_qualify_dict:
             command_qualify_dict[command.cog_name if command.cog_name is not None else "No Category"] = [command.qualified_name]
