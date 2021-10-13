@@ -48,7 +48,7 @@ class Info(commands.Cog, name="Info"):
     @commands.command(aliases=["eval"])
     @check_access(ClanOwners)
     async def e(self, ctx, *, code):
-        code = code.replace("```")
+        code = code.replace("```", "")
         if code.startswith("py"):
             code = code[2:]
         default = {
