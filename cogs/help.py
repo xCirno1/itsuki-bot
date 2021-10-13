@@ -14,7 +14,6 @@ def qualify_command(self) -> Dict[str, List[str]]:
         cog = command.cog_name if command.cog_name is not None else "No Category"
         if cog not in command_qualify_dict:
             command_qualify_dict[command.cog_name if command.cog_name is not None else "No Category"] = [command.qualified_name]
-            print("a")
         else:
             command_qualify_dict[command.cog_name if command.cog_name is not None else "No Category"].append(command.qualified_name)
     return command_qualify_dict
