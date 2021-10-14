@@ -5,7 +5,7 @@ import io
 import textwrap
 import traceback
 
-from discord.ext import commands
+from discord.ext import commands, tasks  # noqa
 
 from enums import ClanOwners
 from ext.decorators import cancel_long_invoke, check_access
@@ -47,7 +47,9 @@ class Info(commands.Cog, name="Info"):
 
     @commands.command(aliases=["eval"], hidden=True)
     @check_access(ClanOwners)
+    @cancel_long_invoke
     async def e(self, ctx, *, code):
+        """Eval code (in python)."""
         code = code.replace("```", "")
         if code.startswith("py"):
             code = code[2:]
