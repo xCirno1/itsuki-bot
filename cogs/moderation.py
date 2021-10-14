@@ -6,7 +6,7 @@ from discord.ext import commands
 from typing import Optional
 
 from ext.context import Context
-
+from ext.errors import NotAllowed
 
 BASE_REASON: str = "No Reason Provided."
 
@@ -19,7 +19,7 @@ class Moderation(commands.Cog):
     def check_state(member: discord.Member, target: discord.Member):
         if member.top_role > target.top_role:
             return True
-        raise commands.MissingPermissions(f"Your role is lower or equals to {target}")
+        raise NotAllowed(f"Your role is lower or equals to {target}")
 
     @commands.command()
     @commands.has_permissions(kick_members=True)

@@ -20,7 +20,7 @@ class Listeners(commands.Cog):
         error = getattr(error, "original", error)
 
         if isinstance(error, NotAllowed):
-            await ctx.send(error.message)
+            await ctx.send(f":x: {error.message}")
 
         elif isinstance(error, CommandOnCooldown):
             await ctx.send(f"Command is on cooldown! Try again in: {error.retry_after} second(s).")
