@@ -1,6 +1,8 @@
 from discord.ext import commands
+from discord.ext.commands import CommandOnCooldown
 
 from ext.context import Context
+from ext.errors import NotAllowed
 
 
 class Listeners(commands.Cog):
@@ -15,8 +17,17 @@ class Listeners(commands.Cog):
 
     @commands.Cog.listener("on_command_error")
     async def command_error(self, ctx, error) -> None:
-        await ctx.send(error)
-        raise error
+        error = getattr(error, "original", error)
+
+        if isinstance(error, NotAllowed):
+            await ctx.send(error.message)
+
+        elif isinstance(error, CommandOnCooldown):
+            await ctx.send(f"Command is on cooldown! Try again in: {error.retry_after} second(s).")
+
+        else:
+            await ctx.send(error)
+            raise error
 
 
 def setup(bot):

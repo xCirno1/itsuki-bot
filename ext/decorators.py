@@ -5,6 +5,8 @@ import functools
 
 from discord.ext.commands import Context
 
+from ext.errors import NotAllowed
+
 
 def cancel_long_invoke(timeout: int = 1):
     """This decorator will cancel a running function if it runs too long."""
@@ -49,7 +51,7 @@ def check_access(Type: enums):
                             return await context.bot.loop.create_task(func(*args, **kwargs))
                 except AttributeError:
                     pass
-            return
+            raise NotAllowed("You are not allowed to use this command!")
         return wrapper
     return decorator
 
