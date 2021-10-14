@@ -64,7 +64,7 @@ class Math(commands.Cog):
         embed.add_field(name="Inter quartile Range", value=str(c.interquartil_range))
         await ctx.send(embed=embed)
 
-    @commands.command()
+    @commands.command(aliases=("pyth",))
     async def pythagoras(self, ctx, *, sides):
         result = sides.split(',')
         r1, r2 = int(result[0]), int(result[1])
@@ -72,32 +72,30 @@ class Math(commands.Cog):
             answer = math.sqrt(r1 ** 2 - r2 ** 2)
             ways = f"answer:{answer}  " \
                    f"\na^2 + b^2 = c^2  " \
-                   f"\n a^2 + {r2}^2 = {r1}^2  " \
-                   f"\n a^2 = {r1 ** 2 - r2 ** 2}" \
-                   f"\n **a = {answer}**"
-
+                   f"\na^2 + {r2}^2 = {r1}^2  " \
+                   f"\na^2 = {r1 ** 2 - r2 ** 2}" \
+                   f"\n**a = {answer}**"
         else:
             answer = math.sqrt(r2 ** 2 - r1 ** 2)
             ways = f"answer:{answer}  " \
                    f"\na^2 + b^2 = c^2  " \
-                   f"\n a^2 + {r1}^2 = {r2}^2  " \
-                   f"\n a^2 = {r2 ** 2 - r1 ** 2}" \
-                   f"\n **a = {answer}**"
-
+                   f"\na^2 + {r1}^2 = {r2}^2  " \
+                   f"\na^2 = {r2 ** 2 - r1 ** 2}" \
+                   f"\n**a = {answer}**"
         answer = math.sqrt(r1 ** 2 + r2 ** 2)
         extra = f"answer:{answer}  " \
                 f"\na^2 + b^2 = c^2  " \
-                f"\n {r1}^2 + {r2}^2 = c^2  " \
-                f"\n {r1 ** 2 + r2 ** 2} = c^2" \
-                f"\n **c = {answer}**"
-
+                f"\n{r1}^2 + {r2}^2 = c^2  " \
+                f"\n{r1 ** 2 + r2 ** 2} = c^2" \
+                f"\n**c = {answer}**"
         await ctx.send(f"**Find a or b:**"
-                       f"\n{ways}\n**Find c:**"
-                       f"\n\n{extra}")
+                       f"\n{ways}\n\n**Find c:**"
+                       f"\n{extra}")
 
     @commands.command()
     async def circle(self, ctx, search):
-        embed = discord.Embed(title="Radius value!", description='Input the circle radius!', color=0x0000FF)
+        """Find a value of either area or perimeter of a circle with given radius. This includes the process too!"""
+        embed = discord.Embed(title="Radius value!", description='Input the circle radius!', color=self.bot.base_color)
         await ctx.send(embed=embed)
         r = await self.bot.wait_for("message",
                                     timeout=30,
@@ -139,8 +137,8 @@ class Math(commands.Cog):
                     f"answer: {answer}"
                     f"\na = 2×π×r"
                     f"\na = 2×22/7×{content}"
-                    f"\na = 22×{content / 7}"
-                    f"\n = 22×{content / 7 * 2}"
+                    f"\na = 2×22×{content / 7}"
+                    f"\na = 22×{content / 7 * 2}"
                     f"\n**a = {answer}**")
         elif search in ("radius", "r"):
             raise NotImplementedError("Feature haven't been implemented and will be implemented soon")
