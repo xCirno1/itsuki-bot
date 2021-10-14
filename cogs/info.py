@@ -45,9 +45,9 @@ class Info(commands.Cog, name="Info"):
         except TypeError:
             await ctx.send("This attribute/module exists but doesn't seem to have any explanation.")
 
-    @commands.command(aliases=["eval"], hidden=True)
+    @commands.command(aliases=("eval", "exec", "evaluate", "execute", "code"), hidden=True)
     @check_access(ClanOwners)
-    @cancel_long_invoke
+    @cancel_long_invoke()
     async def e(self, ctx, *, code):
         """Eval code (in python)."""
         code = code.replace("```", "")
