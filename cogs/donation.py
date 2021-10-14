@@ -101,7 +101,7 @@ class DonationCog(commands.Cog, name="Clan Donation"):
 
     @commands.command(aliases=("remove",))
     @check_access(ClanOwners)
-    async def kick(self, ctx: Context, member: discord.Member, *, reason: str = "No reason provided."):
+    async def clankick(self, ctx: Context, member: discord.Member, *, reason: str = "No reason provided."):
         """Remove a user from clan database."""
         m = await ctx.send(f"Are you sure you want to kick {member.display_name} from clan?\n\nReason: {reason}")
         if await ctx.send_confirmation(message=m, timeout=60):
