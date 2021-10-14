@@ -42,3 +42,6 @@ class Context(commands.Context):
                                 check=lambda re, us: us.id == self.author.id and str(re.emoji) == '🗑️' and re.message == message,
                                 timeout=timeout)
         await message.delete()
+
+    async def alert(self, *args, **kwargs):
+        await super().send(*args, **kwargs, delete_after=10)
