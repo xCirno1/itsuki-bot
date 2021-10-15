@@ -152,9 +152,9 @@ class Math(commands.Cog):
             a = ABC["A"]
             b = ABC["B"]
             c = ABC["C"]
-            x1 = (-b + sqrt(b**2 - 4*a*c))/2*a
-            x2 = (-b - sqrt(b**2 - 4*a*c))/2*a
-            await ctx.send(str({x1, x2}))
+            x1 = (-b + sqrt(b ** 2 - 4 * a * c)) / (2 * a)
+            x2 = (-b - sqrt(b ** 2 - 4 * a * c)) / (2 * a)
+            return str({x1, x2})
 
         def parse_quadratic_equation(eq: str):
             chars = [char for count, char in enumerate(eq)
@@ -162,7 +162,10 @@ class Math(commands.Cog):
             var = 'ABC'
             group_by = {}
             count = 0
-            if not chars[0].isdigit() and not chars[1].isdigit():  # prevent bug on equation startswith -X
+            if chars.count('-') + chars.count('+') < 3 and chars[0] in ('-', '+'):
+                chars.insert(0, "1")
+            if (not chars[0].isdigit() and not chars[1].isdigit()) or chars[0] == "+":
+                # prevent bug on equation startswith -X
                 chars.insert(0, "1")
             for c, i in enumerate(chars):
                 if i.isdigit() and not chars[c - 1].isdigit():  # different group with character before it
@@ -185,9 +188,10 @@ class Math(commands.Cog):
                     count += 1
             for k, v in group_by.items():
                 group_by[k] = int(''.join(v))
-            count_quadratic_equation(group_by)
+            return count_quadratic_equation(group_by)
 
-        parse_quadratic_equation(equation)
+        result = parse_quadratic_equation(equation)
+        await ctx.send(result)
 
 
 def setup(bot):
