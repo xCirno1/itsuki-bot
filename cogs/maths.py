@@ -2,10 +2,12 @@ import discord
 import math
 
 from discord.ext import commands
-
+from typing import Dict
+from math import sqrt
 from operator import pow, truediv, mul, add, sub, is_, is_not
 
 from ext.utils import Calculate
+from ext.context import Context
 
 
 class Math(commands.Cog):
@@ -13,7 +15,7 @@ class Math(commands.Cog):
         self.bot = bot
 
     @commands.command(aliases=("calc", "c", "math", "count", "solve"))
-    async def calculate(self, ctx, *, problem):
+    async def calculate(self, ctx: Context, *, problem):
         """Calculate some math query.
         Full supported operator:
             '+', '-', '*', 'x', '×', '/', '÷', '^', '**', 'isnot', '==', '!=', 'is''='
@@ -65,7 +67,7 @@ class Math(commands.Cog):
         await ctx.send(embed=embed)
 
     @commands.command(aliases=("pyth",))
-    async def pythagoras(self, ctx, *, sides):
+    async def pythagoras(self, ctx: Context, *, sides):
         result = sides.split(',')
         r1, r2 = int(result[0]), int(result[1])
         if r1 > r2:
@@ -93,7 +95,7 @@ class Math(commands.Cog):
                        f"\n{extra}")
 
     @commands.command()
-    async def circle(self, ctx, search):
+    async def circle(self, ctx: Context, search):
         """Find a value of either area or perimeter of a circle with given radius. This includes the process too!"""
         embed = discord.Embed(title="Radius value!", description='Input the circle radius!', color=self.bot.base_color)
         await ctx.send(embed=embed)
@@ -143,6 +145,49 @@ class Math(commands.Cog):
         elif search in ("radius", "r"):
             raise NotImplementedError("Feature haven't been implemented and will be implemented soon")
         # TODO: add radius search
+
+    @commands.command()
+    async def quadraticequation(self, ctx: Context, *, equation: str):
+        def count_quadratic_equation(ABC: Dict[str, int]):
+            a = ABC["A"]
+            b = ABC["B"]
+            c = ABC["C"]
+            x1 = (-b + sqrt(b**2 - 4*a*c))/2*a
+            x2 = (-b - sqrt(b**2 - 4*a*c))/2*a
+            await ctx.send(str({x1, x2}))
+
+        def parse_quadratic_equation(eq: str):
+            chars = [char for count, char in enumerate(eq)
+                     if (char.isdigit() or char in ('-', '+')) and eq[count - 1] != "^"]  # split by - or +
+            var = 'ABC'
+            group_by = {}
+            count = 0
+            if not chars[0].isdigit() and not chars[1].isdigit():  # prevent bug on equation startswith -X
+                chars.insert(0, "1")
+            for c, i in enumerate(chars):
+                if i.isdigit() and not chars[c - 1].isdigit():  # different group with character before it
+                    if var[count] not in group_by:
+                        group_by[var[count]] = [chars[c - 1], i]
+                    else:
+                        group_by[var[count]].append(chars[c - 1])
+                        group_by[var[count]].append(i)
+                elif i.isdigit() and chars[c - 1].isdigit():  # same group with character before it
+                    if var[count] not in group_by:
+                        group_by[var[count]] = [i]
+                    else:
+                        group_by[var[count]].append(i)
+                elif (not i.isdigit() and not chars[c - 1].isdigit()) or (not i.isdigit() and c == 0):
+                    if var[count] not in group_by:
+                        group_by[var[count]] = ["1"]
+                    else:
+                        group_by[var[count]].append("1")
+                if not i.isdigit() and not c == 0:
+                    count += 1
+            for k, v in group_by.items():
+                group_by[k] = int(''.join(v))
+            count_quadratic_equation(group_by)
+
+        parse_quadratic_equation(equation)
 
 
 def setup(bot):
