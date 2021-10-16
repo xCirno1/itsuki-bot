@@ -2,8 +2,9 @@ import discord
 import re
 
 from argparse import ArgumentParser
+from collections.abc import Iterable as It
 from discord.ext import commands
-from typing import Optional
+from typing import Optional, Union, Iterable
 
 from ext.context import Context
 from ext.errors import NotAllowed
@@ -16,36 +17,56 @@ class Moderation(commands.Cog):
         self.bot = bot
 
     @staticmethod
-    def check_state(member: discord.Member, target: discord.Member):
+    def check_state(member: discord.Member, target: Union[Iterable[discord.Member], discord.Member], fail: bool = True):
+        if isinstance(target, It):
+            if all(member.top_role > m.top_role for m in target):
+                return True
         if member.top_role > target.top_role:
             return True
-        raise NotAllowed(f"Your role is lower or equals to {target}")
+        if fail:
+            raise NotAllowed(f"Your role is lower or equals to {target}")
+        else:
+            return False
 
     @commands.command()
     @commands.has_permissions(kick_members=True)
     async def kick(self, ctx: Context,
                    member: commands.Greedy[discord.Member],
-                   *, reason: Optional[str] = BASE_REASON) -> None:
-        """Kick a member from the server. You can provide multiple users too."""
+                   *, reason: Optional[str] = BASE_REASON) -> Optional[discord.Message]:
+        """Kick member(s) from the server. You can provide multiple members too."""
+        self.check_state(ctx.author, member)
         message = await ctx.send(f"Are you sure you want to kick {member}?\n\nReason:\n{reason}")
         if await ctx.send_confirmation(message):
+            if isinstance(member, Iterable):
+                for m in member:
+                    await m.kick(reason=reason)
+                    user = self.bot.get_user(m.id)
+                    await user.send(f"You are kicked from {ctx.guild}!\n\nReason:\n{reason}")
+                return await ctx.send(f"Kicked all {ctx.author}!")
             user = self.bot.get_user(member.id)
             await member.kick(reason=reason)
             await ctx.send(f"Kicked {ctx.author}!")
-            await user.send(f"You've been kicked from {ctx.guild}")
+            await user.send(f"You are kicked from {ctx.guild}!\n\nReason:\n{reason}")
 
     @commands.command()
     @commands.has_permissions(ban_members=True)
     async def ban(self, ctx: Context,
                   member: commands.Greedy[discord.Member],
-                  *, reason: Optional[str] = BASE_REASON) -> None:
-        """Ban a member from the server. You can provide multiple users too."""
+                  *, reason: Optional[str] = BASE_REASON) -> Optional[discord.Message]:
+        """Ban a member(s) from the server. You can provide multiple members too."""
+        self.check_state(ctx.author, member)
         message = await ctx.send(f"Are you sure you want to ban {member}?\n\nReason:\n{reason}")
         if await ctx.send_confirmation(message):
+            if isinstance(member, Iterable):
+                for m in member:
+                    await m.ban(reason=reason)
+                    user = self.bot.get_user(m.id)
+                    await user.send(f"You are banned from {ctx.guild}!\n\nReason:\n{reason}")
+                return await ctx.send(f"Banned all {member}!")
             user = self.bot.get_user(member.id)
             await member.ban(reason=reason)
             await ctx.send(f"Banned {member}!")
-            await user.send(f"You are banned from {ctx.guild}!")
+            await user.send(f"You are banned from {ctx.guild}!\n\nReason:\n{reason}")
 
     @commands.command()
     async def nick(self, ctx: Context,
@@ -53,14 +74,23 @@ class Moderation(commands.Cog):
                    new_name: Optional[str] = None,
                    reason: Optional[str] = BASE_REASON
                    ) -> Optional[discord.Message]:
-        """Change the nickname of a member.
+        """Change the nickname of member(s). You can provide multiple members too.
         There are 2 logics implemented here
-        1. If the member role's is higher than yours, your **own** nickname will be changed to new_name.
+        1. If the member role's is higher than yours or you don't provide any members,
+        your **own** nickname will be changed to new_name.
         2. If no new_name is provided, the member or your nickname will be resetted."""
         if ctx.author.guild_permissions.manage_nicknames and member:
             raise commands.MissingPermissions("manage_nicknames")
         member: discord.Member = member or ctx.author
-        await member.edit(nick=new_name, reason=reason)
+        if self.check_state(ctx.author, member):
+            if isinstance(member, Iterable):
+                for m in member:
+                    await m.edit(nick=new_name, reason=reason)
+            else:
+                await member.edit(nick=new_name, reason=reason)
+        else:
+            member = ctx.author
+            await member.edit(nick=new_name, reason=reason)
         if new_name:
             return await ctx.send(f"Changed nick of {member.display_name} to {new_name}")
         await ctx.send(f"Resetted nick of {member}.")
