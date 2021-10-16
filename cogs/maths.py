@@ -1,5 +1,6 @@
 import discord
 import math
+import re
 
 from discord.ext import commands
 from typing import Dict
@@ -146,53 +147,67 @@ class Math(commands.Cog):
             raise NotImplementedError("Feature haven't been implemented and will be implemented soon")
         # TODO: add radius search
 
-    @commands.command()
+    @commands.command(aliases=("qe", "quadratic"))
     async def quadraticequation(self, ctx: Context, *, equation: str):
+        """Count some quadratic equation.
+        **Example:**
+        ```py
+        i!qe 5y^2 - 23y - 10 = 0
+        or
+        i!qe 3X + 12X^2 - 6 = 0
+        ```
+
+        __**Note:**__
+        1. This only works with 3 **different** group (x^2, x, digit)
+        2. You need to simplify the equation, e.g `x + -x^2 + -8` becomes `x -x^2 -8`
+        3. This only works with equation resulted 0
+        4. Equation without result, the result will be considered as 0
+        """
+
+        def classify_group(substring: str):
+            if "^2" in substring:
+                return "A"
+            elif substring.isdigit():
+                return "C"
+            else:
+                return "B"
+
+        def parse_quadratic_equation(eq: str):
+            if "=" in eq:
+                right = eq.split("=")[1]
+                if int(right) != 0:
+                    print(right)
+                    raise NotImplementedError("This feature is not implemented yet!")
+                eq = eq.split("=")[0]
+            if not eq.startswith("-"):
+                eq = f"+{eq}"
+
+            order_by: dict = {"A": None, "B": None, "C": None}
+            splitted = list(filter(lambda s: ' ' not in s and s, re.split(r"([-+\s])", eq)))
+            for c, i in enumerate(splitted):
+                if i in ('-', '+'):
+                    order_by[classify_group(splitted[c + 1])] = ''.join(i + splitted[c + 1])
+            for k, v in order_by.items():
+                lc = ''.join([char for count, char in enumerate(v)
+                              if (char.isdigit() or char in ("-", "+")) and not v[count - 1] == "^"])
+                if lc in ("+", "-"):
+                    order_by[k] = int(f'{lc}1')
+                else:
+                    order_by[k] = int(lc)
+            return count_quadratic_equation(order_by)
+
         def count_quadratic_equation(ABC: Dict[str, int]):
             a = ABC["A"]
             b = ABC["B"]
             c = ABC["C"]
             x1 = (-b + sqrt(b ** 2 - 4 * a * c)) / (2 * a)
             x2 = (-b - sqrt(b ** 2 - 4 * a * c)) / (2 * a)
-            return str({x1, x2})
-
-        def parse_quadratic_equation(eq: str):
-            chars = [char for count, char in enumerate(eq)
-                     if (char.isdigit() or char in ('-', '+')) and eq[count - 1] != "^"]  # split by - or +
-            var = 'ABC'
-            group_by = {}
-            count = 0
-            if chars.count('-') + chars.count('+') < 3 and chars[0] in ('-', '+'):
-                chars.insert(0, "1")
-            if (not chars[0].isdigit() and not chars[1].isdigit()) or chars[0] == "+":
-                # prevent bug on equation startswith -X
-                chars.insert(0, "1")
-            for c, i in enumerate(chars):
-                if i.isdigit() and not chars[c - 1].isdigit():  # different group with character before it
-                    if var[count] not in group_by:
-                        group_by[var[count]] = [chars[c - 1], i]
-                    else:
-                        group_by[var[count]].append(chars[c - 1])
-                        group_by[var[count]].append(i)
-                elif i.isdigit() and chars[c - 1].isdigit():  # same group with character before it
-                    if var[count] not in group_by:
-                        group_by[var[count]] = [i]
-                    else:
-                        group_by[var[count]].append(i)
-                elif (not i.isdigit() and not chars[c - 1].isdigit()) or (not i.isdigit() and c == 0):
-                    if var[count] not in group_by:
-                        group_by[var[count]] = ["1"]
-                    else:
-                        group_by[var[count]].append("1")
-                if not i.isdigit() and not c == 0:
-                    count += 1
-            for k, v in group_by.items():
-                group_by[k] = int(''.join(v))
-            return count_quadratic_equation(group_by)
+            return {x1, x2}
 
         result = parse_quadratic_equation(equation)
-        await ctx.send(result)
-
+        await ctx.send(str(result))
+        # TODO: add process
+        # TODO: add fraction when result is not whole number
 
 def setup(bot):
     bot.add_cog(Math(bot))
