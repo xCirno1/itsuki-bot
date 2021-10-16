@@ -18,9 +18,12 @@ class Moderation(commands.Cog):
 
     @staticmethod
     def check_state(member: discord.Member, target: Union[Iterable[discord.Member], discord.Member], fail: bool = True):
+
         if isinstance(target, It):
-            if all(member.top_role > m.top_role for m in target):
+            if all(m.top_role > m.top_role for m in target):
                 return True
+            else:
+                raise NotAllowed(f"Your role is lower or equals to {[m.nick for m in target]}")
         if member.top_role > target.top_role:
             return True
         if fail:
@@ -71,16 +74,17 @@ class Moderation(commands.Cog):
     @commands.command()
     async def nick(self, ctx: Context,
                    member: commands.Greedy[discord.Member] = None,
-                   new_name: Optional[str] = None,
-                   reason: Optional[str] = BASE_REASON
+                   new_name: str = None,
+                   *, reason: Optional[str] = BASE_REASON
                    ) -> Optional[discord.Message]:
         """Change the nickname of member(s). You can provide multiple members too.
         There are 2 logics implemented here
         1. If the member role's is higher than yours or you don't provide any members,
         your **own** nickname will be changed to new_name.
         2. If no new_name is provided, the member or your nickname will be resetted."""
-        if ctx.author.guild_permissions.manage_nicknames and member:
-            raise commands.MissingPermissions("manage_nicknames")
+
+        if not ctx.author.guild_permissions.manage_nicknames and member:
+            raise commands.MissingPermissions(missing_perms=("manage_nicknames",))
         member: discord.Member = member or ctx.author
         if self.check_state(ctx.author, member):
             if isinstance(member, Iterable):
@@ -89,11 +93,11 @@ class Moderation(commands.Cog):
             else:
                 await member.edit(nick=new_name, reason=reason)
         else:
-            member = ctx.author
-            await member.edit(nick=new_name, reason=reason)
+            member: discord.Member = ctx.author
+            await member[0].edit(nick=new_name, reason=reason)
         if new_name:
-            return await ctx.send(f"Changed nick of {member.display_name} to {new_name}")
-        await ctx.send(f"Resetted nick of {member}.")
+            return await ctx.send(f"Changed nick of {[m.mention for m in member]} to {new_name}")
+        await ctx.send(f"Resetted nick of {[m.mention for m in member]}.")
 
     @commands.command()
     @commands.has_permissions(manage_messages=True)
