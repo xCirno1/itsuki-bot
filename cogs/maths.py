@@ -202,11 +202,31 @@ class Math(commands.Cog):
             c = ABC["C"]
             x1 = (-b + sqrt(b ** 2 - 4 * a * c)) / (2 * a)
             x2 = (-b - sqrt(b ** 2 - 4 * a * c)) / (2 * a)
-            return {x1, x2}
+            process = f"""
+**Datas:**
+    A: {a}
+    B: {b}
+    C: {c}
+
+**Process:**
+    X1,2 = (-b ± √(b^2 - 4ac))/2a
+    X1,2 = (-{-b} ± √({b}^2 - 4.{a}.{c}))/2.{a}
+    X1,2 = ({f"{-b}" if b < 0 else f"{b}"} ± √({b ** 2} - {4 * a * c}))/{2 * a}
+    X1,2 = ({f"{-b}" if b < 0 else f"{b}"} ± √({(b ** 2) - 4 * a * c})/{2 * a}
+    X1,2 = ({f"{-b}" if b < 0 else f"{b}"}) ± {sqrt((b ** 2) - 4 * a * c)}))/{2 * a}
+
+    X1 = ({f"{-b}" if b < 0 else f"{b}"} + {sqrt((b ** 2) - 4 * a * c)})/{2 * a}
+    X1 = {(-b if b < 0 else b) + sqrt((b ** 2) - 4 * a * c)}/{2 * a}
+    X1 = {((-b if b < 0 else b) + sqrt((b ** 2) - 4 * a * c)) / (2 * a)}
+
+    X2 = ({f"{-b}" if b < 0 else f"{b}"} - {sqrt((b ** 2) - 4 * a * c)})/{2 * a}
+    X2 = {(-b if b < 0 else b) - sqrt((b ** 2) - 4 * a * c)}/{2 * a}
+    X2 = {((-b if b < 0 else b) - sqrt((b ** 2) - 4 * a * c)) / (2 * a)}
+"""
+            return {x1, x2}, process
 
         result = parse_quadratic_equation(equation)
-        await ctx.send(str(result))
-        # TODO: add process
+        await ctx.send(f"**Answer:** {str(result[0])}\n\n{result[1]}")
         # TODO: add fraction when result is not whole number
 
 def setup(bot):
