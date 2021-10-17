@@ -1,7 +1,15 @@
+from __future__ import annotations
+
 import discord
 
+from discord import Emoji
 from discord.ext import commands
-from typing import Optional
+from typing import Optional, List, Union, Callable, TYPE_CHECKING
+
+from .pagination import Paginate
+
+if TYPE_CHECKING:
+    from discord import User
 
 
 class Context(commands.Context):
@@ -45,3 +53,17 @@ class Context(commands.Context):
 
     async def alert(self, *args, **kwargs):
         await super().send(*args, **kwargs, delete_after=10)
+
+    def paginate(self, message=None,
+                 reactions: List[Union[str, Emoji]] = None,
+                 check: Callable = None, timeout: int = None,
+                 user: User = None, pages=None, start_from_page: int = 0):
+        cls = Paginate
+        cls.from_context(self)
+        return cls(message=message,
+                   reactions=reactions,
+                   check=check,
+                   user=user,
+                   pages=pages,
+                   start_from_page=start_from_page,
+                   timeout=timeout)
