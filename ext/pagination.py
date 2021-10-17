@@ -18,7 +18,7 @@ class PaginationCallback:
         self.base_class = __class
         self.reactions = __class.reactions
         self.message = __class.message
-        self.bot = asyncio.run(__class.context.bot.get_context(self.message))
+        self.bot = asyncio.create_task(__class.context.bot.get_context(self.message))
         self.reaction = reaction
         self.user = user
         self.destination = __class.destination
@@ -26,10 +26,10 @@ class PaginationCallback:
 
 
 class Paginate:
-    def __init__(self, message,
+    def __init__(self, message=None,
                  reactions: List[Union[str, Emoji]] = None,
                  check: Callable = None, timeout: int = None,
-                 user: User = None, pages=None, start_from_page: int = 1):
+                 user: User = None, pages=None, start_from_page: int = 0):
         self.reactions = reactions or ["⬅️", "➡️"]
         self.message = message
         self.page = start_from_page
@@ -38,20 +38,23 @@ class Paginate:
         self.timeout = timeout
         self.__callback = PaginationCallback
         self.target = user or self.context.author
-        self.destination = message.channel
-        for reaction in reactions:
-            asyncio.create_task(self.add_item(reaction,
-                                              check=lambda callback:
-                                              str(callback.reaction) in reactions
-                                              and callback.user == self.target
-                                              )
+        self.destination = message.channel if message is not None else self.context.channel
+        if self.message is None and self.pages:
+            asyncio.create_task(self._ensure_message())
+
+    async def _ensure_message(self):
+        self.message = await self.destination.send(embed=self.pages[self.page])
+        for reaction in self.reactions:
+            await self.add_item(reaction,
+                                check=lambda callback:
+                                str(callback.reaction) in self.reactions
+                                and callback.user == self.target
                                 )
 
     async def add_item(self, reaction: Union[str, Emoji],
                        check: Callable = None,
                        __callback: Callable = None):
         await self.message.add_reaction(reaction)
-        self.reactions.append(reaction)
         asyncio.create_task(self.listen(reaction, check, __callback))
 
     @classmethod
@@ -60,13 +63,13 @@ class Paginate:
 
     async def callback(self, r, u):  # noqa
         if str(r.emoji) == "⬅️":
-            if self.page > 1:
+            if self.page > 0:
                 self.page -= 1
-                await self.message.edit(embed=self.pages[self.page - 1])
+                await self.message.edit(embed=self.pages[self.page])
         elif str(r.emoji) == "➡️":
-            if self.page < len(self.pages):
+            if self.page < len(self.pages) - 1:
                 self.page += 1
-                await self.message.edit(embed=self.pages[self.page - 1])
+                await self.message.edit(embed=self.pages[self.page])
 
     async def listen(self, reaction: Union[str, Emoji, int],
                      check: Callable = None,
@@ -77,11 +80,13 @@ class Paginate:
                                                )
         if check is None:
             if callback is not None:
-                return callback(r, u)
-            await self.callback(r, u)
+                callback(r, u)
+            else:
+                await self.callback(r, u)
         elif check(self.__callback(self, r, u)):  # pass the PaginationCallback to `check` parameter
             if callback is not None:
-                return callback(r, u)
-            await self.callback(r, u)
+                callback(r, u)
+            else:
+                await self.callback(r, u)
 
         await self.listen(reaction, check, callback)
