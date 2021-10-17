@@ -18,7 +18,7 @@ class PaginationCallback:
         self.base_class = __class
         self.reactions = __class.reactions
         self.message = __class.message
-        self.bot = asyncio.create_task(__class.context.bot.get_context(self.message))
+        self.bot = asyncio.run(__class.context.bot.get_context(self.message))
         self.reaction = reaction
         self.user = user
         self.destination = __class.destination
@@ -30,7 +30,7 @@ class Paginate:
                  reactions: List[Union[str, Emoji]] = None,
                  check: Callable = None, timeout: int = None,
                  user: User = None, pages=None, start_from_page: int = 1):
-        self.reactions = reactions
+        self.reactions = reactions or ["⬅️", "➡️"]
         self.message = message
         self.page = start_from_page
         self.pages = pages
@@ -42,7 +42,7 @@ class Paginate:
         for reaction in reactions:
             asyncio.create_task(self.add_item(reaction,
                                               check=lambda callback:
-                                              str(callback.reaction) in ("⬅️", "➡️")
+                                              str(callback.reaction) in reactions
                                               and callback.user == self.target
                                               )
                                 )
