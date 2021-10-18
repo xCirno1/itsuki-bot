@@ -176,7 +176,6 @@ class Math(commands.Cog):
             if "=" in eq:
                 right = eq.split("=")[1]
                 if int(right) != 0:
-                    print(right)
                     raise NotImplementedError("This feature is not implemented yet!")
                 eq = eq.split("=")[0]
             if not eq.startswith("-"):

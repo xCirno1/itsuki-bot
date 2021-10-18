@@ -123,7 +123,6 @@ class DonationCog(commands.Cog, name="Clan Donation"):
         # currently implemented: debt, not_donate_days, donation_today, donation_streak
         try:
             await self.bot.wait_until_ready()
-            print(datetime.utcnow())
             if datetime.utcnow().strftime("%H:%M") == "00:00":
                 self.cur.execute("SELECT acc_id FROM data")
                 ti: List[Tuple[int, ...]] = self.cur.fetchall()
