@@ -196,24 +196,28 @@ class Math(commands.Cog):
                     order_by[k] = int(lc)
             return count_quadratic_equation(order_by)
 
+        def get_discriminant(r):
+            if r < 0:
+                return "Imaginary"
+            elif r == 0:
+                return "Twin roots"
+            else:
+                return "Real and different roots"
+
         def count_quadratic_equation(ABC: Dict[str, int]):
             a = ABC["A"]
             b = ABC["B"]
             c = ABC["C"]
-            x1 = (-b + sqrt(b ** 2 - 4 * a * c)) / (2 * a)
-            x2 = (-b - sqrt(b ** 2 - 4 * a * c)) / (2 * a)
-            process = f"""
-**Datas:**
-    A: {a}
-    B: {b}
-    C: {c}
 
-**Process:**
-    X1,2 = (-b ± √(b^2 - 4ac))/2a
+            d = b ** 2 - 4 * a * c
+            try:
+                x1 = (-b + sqrt(b ** 2 - 4 * a * c)) / (2 * a)
+                x2 = (-b - sqrt(b ** 2 - 4 * a * c)) / (2 * a)
+                p = f"""X1,2 = (-b ± √(b^2 - 4ac))/2a
     X1,2 = (-{-b} ± √({b}^2 - 4.{a}.{c}))/2.{a}
     X1,2 = ({f"{-b}" if b < 0 else f"{b}"} ± √({b ** 2} - {4 * a * c}))/{2 * a}
     X1,2 = ({f"{-b}" if b < 0 else f"{b}"} ± √({(b ** 2) - 4 * a * c})/{2 * a}
-    X1,2 = ({f"{-b}" if b < 0 else f"{b}"}) ± {sqrt((b ** 2) - 4 * a * c)}))/{2 * a}
+    X1,2 = ({f"{-b}" if b < 0 else f"{b}"} ± {sqrt((b ** 2) - 4 * a * c)})/{2 * a}
 
     X1 = ({f"{-b}" if b < 0 else f"{b}"} + {sqrt((b ** 2) - 4 * a * c)})/{2 * a}
     X1 = {(-b if b < 0 else b) + sqrt((b ** 2) - 4 * a * c)}/{2 * a}
@@ -223,8 +227,25 @@ class Math(commands.Cog):
     X2 = {(-b if b < 0 else b) - sqrt((b ** 2) - 4 * a * c)}/{2 * a}
     X2 = {((-b if b < 0 else b) - sqrt((b ** 2) - 4 * a * c)) / (2 * a)}
 """
-            return {x1, x2}, process
+            except ValueError:
+                x1 = x2 = "Invalid"
+                p = "Math domain error"
+            process = f"""
+**Datas:**
+    A: {a}
+    B: {b}
+    C: {c}
 
+**Process:**
+    {p}
+
+**Discriminant:**
+    D = b^2 - 4ac
+    D = {b}^2 - (4 * {a} * {c})
+    D = {b ** 2} - ({4 * a * c})
+    D = {d} ({get_discriminant(d)})
+            """
+            return f"{x1, x2}", process
         result = parse_quadratic_equation(equation)
         await ctx.send(f"**Answer:** {str(result[0])}\n\n{result[1]}")
         # TODO: add fraction when result is not whole number
