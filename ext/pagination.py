@@ -2,9 +2,8 @@ from __future__ import annotations
 
 import asyncio
 
-from typing import List, Union, Callable, TYPE_CHECKING
-
 from discord import Emoji
+from typing import List, Union, Callable, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from discord import Reaction, User
@@ -31,7 +30,6 @@ class Paginate:
                  check: Callable = None, timeout: int = None,
                  user: User = None, pages=None, start_from_page: int = 0):
         self.reactions = reactions or ["⬅️", "➡️"]
-        self.message = message
         self.page = start_from_page
         self.pages = pages
         self.check = check
@@ -39,11 +37,13 @@ class Paginate:
         self.__callback = PaginationCallback
         self.target = user or self.context.author
         self.destination = message.channel if message is not None else self.context.channel
-        if self.message is None and self.pages:
-            asyncio.create_task(self._ensure_message())
+        if message is None and self.pages:
+            asyncio.create_task(self._ensure_message(message))
 
-    async def _ensure_message(self):
-        self.message = await self.destination.send(embed=self.pages[self.page])
+    async def _ensure_message(self, message):
+        self.message = message
+        if message is None:
+            self.message = await self.destination.send(embed=self.pages[self.page])
         for reaction in self.reactions:
             await self.add_item(reaction,
                                 check=lambda callback:
@@ -55,6 +55,8 @@ class Paginate:
                        check: Callable = None,
                        __callback: Callable = None):
         await self.message.add_reaction(reaction)
+        if reaction not in self.reactions:
+            self.reactions.append(reaction)
         asyncio.create_task(self.listen(reaction, check, __callback))
 
     @classmethod
@@ -75,7 +77,8 @@ class Paginate:
                      check: Callable = None,
                      callback: Callable = None):
         r, u = await self.context.bot.wait_for("reaction_add",
-                                               check=lambda re, us: str(re.emoji) == str(reaction),
+                                               check=lambda re, us: str(
+                                                   re.emoji) == str(reaction) and re.message == self.message,
                                                timeout=self.timeout
                                                )
         if check is None:
