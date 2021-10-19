@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import discord
 
 from discord import Emoji
 from typing import List, Union, Callable, TYPE_CHECKING
@@ -39,6 +40,27 @@ class Paginate:
         self.destination = message.channel if message is not None else self.context.channel
         if message is None and self.pages:
             asyncio.create_task(self._ensure_message(message))
+
+    def auto_paginate(self, string: str, max_chars: int = 500, split_by: str = "\n"):
+        total = 0
+        _min = 0
+        target = 0
+        base = self.pages[0].to_dict()
+        self.pages.pop(0)
+        if len(string) <= max_chars:
+            self.pages[0].description = string
+            return
+        for current, row in enumerate(string.split(split_by)):
+            if total + len(row) < max_chars:
+                total += len(row)
+            else:
+                target = current
+                total = 0
+                base["description"] = split_by.join(string.split(split_by)[_min:current])
+                self.pages.append(discord.Embed.from_dict(base))
+        if total != 0:
+            base["description"] = split_by.join(string.split(split_by)[target:])
+            self.pages.append(discord.Embed.from_dict(base))
 
     async def _ensure_message(self, message):
         self.message = message
