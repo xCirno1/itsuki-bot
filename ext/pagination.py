@@ -48,7 +48,8 @@ class Paginate:
         base = self.pages[0].to_dict()
         self.pages.pop(0)
         if len(string) <= max_chars:
-            self.pages[0].description = string
+            base["description"] = string
+            self.pages.append(discord.Embed.from_dict(base))
             return
         for current, row in enumerate(string.split(split_by)):
             if total + len(row) < max_chars:
@@ -63,6 +64,7 @@ class Paginate:
             self.pages.append(discord.Embed.from_dict(base))
 
     async def _ensure_message(self, message):
+        await asyncio.sleep(0.5)
         self.message = message
         if message is None:
             self.message = await self.destination.send(embed=self.pages[self.page])
