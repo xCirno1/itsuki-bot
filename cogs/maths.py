@@ -7,7 +7,7 @@ from typing import Dict
 from math import sqrt
 from operator import pow, truediv, mul, add, sub, is_, is_not
 
-from ext.utils import Calculate
+from ext.utils import Calculate, massive_replace
 from ext.context import Context
 
 
@@ -163,6 +163,17 @@ class Math(commands.Cog):
         3. This only works with equation resulted 0
         4. Equation without result, the result will be considered as 0
         """
+        equation = equation.replace(" ", "")
+
+        def replace_extra_operator(eq):
+            to_replace = {
+                "+-": "-",
+                "--": "+",
+                "-+": "-",
+                "++": "+"
+            }
+            return massive_replace(eq, to_replace)
+        equation = replace_extra_operator(equation)
 
         def classify_group(substring: str):
             if "^2" in substring:
