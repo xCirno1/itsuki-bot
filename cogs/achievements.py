@@ -1,7 +1,8 @@
-import sqlite3
-import typing
 import discord
 import datetime
+import re
+import sqlite3
+import typing
 
 from typing import Any
 from discord.ext import commands
@@ -13,14 +14,21 @@ from ext.context import Context
 
 con = sqlite3.connect("achievements.db")
 cur = con.cursor()
-cur.execute("CREATE TABLE IF NOT EXISTS achievements(id INTEGER PRIMARY KEY AUTOINCREMENT, acc_id INT, message_count INT, message_deleted INT, bump_count INT, completed TEXT)")
-cur.execute("CREATE TABLE IF NOT EXISTS progress(id INTEGER PRIMARY KEY AUTOINCREMENT, acc_id INT, happy_messaging INT, message_destroyer INT, advertisement INT)")
+cur.execute("CREATE TABLE IF NOT EXISTS achievements(id INTEGER PRIMARY KEY AUTOINCREMENT, acc_id INT, "
+            "message_count INT, message_deleted INT, bump_count INT, level_count INT, completed TEXT)")
+cur.execute("CREATE TABLE IF NOT EXISTS progress(id INTEGER PRIMARY KEY AUTOINCREMENT, acc_id INT, "
+            "happy_messaging INT, message_destroyer INT, advertisement INT, maxed_out INT)")
 con.commit()
 
 # to add: maxed out
-query_dict = {"happy messaging!": "message_count", "message destroyer": "message_deleted", "advertisement!": "bump_count", "maxed out!": "level_count"}
-desc_dict = {"happy messaging!": "Send x messages", "message destroyer": "Delete x messages", "advertisement!": "Bump x times successfully.", "maxed out!": "Reach level x"}
-lev_dict = {"happy messaging!": [1000, 10000, 50000], "message destroyer": [50, 250, 1000], "advertisement!": [25, 100, 250], "maxed out!": [100]}
+query_dict = {"happy messaging!": "message_count", "message destroyer": "message_deleted",
+              "advertisement!": "bump_count", "maxed out!": "level_count"}
+
+desc_dict = {"happy messaging!": "Send x messages", "message destroyer": "Delete x messages",
+             "advertisement!": "Bump x times successfully.", "maxed out!": "Reach level x"}
+
+lev_dict = {"happy messaging!": [1000, 10000, 50000], "message destroyer": [50, 250, 1000],
+            "advertisement!": [25, 100, 250], "maxed out!": [100]}
 
 
 class Achievements(commands.Cog):
@@ -105,7 +113,6 @@ class Achievements(commands.Cog):
         res = res[0] + by
         cur.execute(f"UPDATE achievements SET {col}={res} WHERE acc_id='{obj}'")
         con.commit()
-        cur.execute(f"SELECT {col} FROM achievements WHERE acc_id='{obj}'")
         self._check_level(obj, col)
 
     @staticmethod
@@ -148,7 +155,12 @@ class Achievements(commands.Cog):
         cur.execute("UPDATE achievements SET completed=? WHERE acc_id=?", (",".join(r), obj))
         con.commit()
 
+    def set_progress(self, _id, col_or_ach, target):
+        cur.execute(f"UPDATE achievements SET {col_or_ach}=? WHERE acc_id=?", (target, _id))
+        con.commit()
+        self._add_to_db(_id, col_or_ach, 0)
 # start
+
     @commands.Cog.listener("on_message")
     async def achievements(self, message):
         if not message.author.bot:
@@ -172,10 +184,11 @@ class Achievements(commands.Cog):
     @commands.Cog.listener("on_message")
     async def maxed_out(self, message):
         if not message.author.bot:
-            if message.channel.id == Channels.level_up:
-                if message.author.id == Members.arcane:
-                    if message.content:
-                        pass
+            if message.channel.id == Channels.bot_test:
+                if message.author.id == Members.kylee:
+                    if "has reached level" in message.content:
+                        to = int(''.join(d for d in re.findall(r"level \d*", message.content)[0] if d.isdigit()))
+                        self.set_progress(message.mentions[0].id, "level_count", to)
 
 
 class AchievementCommand(commands.Cog):
@@ -204,7 +217,6 @@ class AchievementCommand(commands.Cog):
                 cur.execute(f"SELECT {query_dict[name]} FROM achievements WHERE acc_id = {ctx.author.id}")
                 progress = cur.fetchone()[0]
                 embed.add_field(name=f"{num}. {name2} ", value=f"{to} ({progress}/{level})", inline=False)
-            print(type(ctx))
             return await ctx.reply(embed=embed)
 
         if achievement.isdigit():
