@@ -4,7 +4,7 @@ import re
 from argparse import ArgumentParser
 from collections.abc import Iterable as It
 from discord.ext import commands
-from typing import Optional, Union, Iterable
+from typing import Optional, Union, Iterable, List
 
 from ext.context import Context
 from ext.errors import NotAllowed
@@ -17,15 +17,20 @@ class Moderation(commands.Cog):
         self.bot = bot
 
     @staticmethod
-    def check_state(member: discord.Member, target: Union[Iterable[discord.Member], discord.Member], fail: bool = True):
-
+    def check_state(member: discord.Member,
+                    target: Union[Iterable[discord.Member], discord.Member],
+                    allow_equal: bool = False, fail: bool = True):
         if isinstance(target, It):
-            if all(m.top_role > m.top_role for m in target):
-                return True
+            if allow_equal:
+                if all(member.top_role >= m.top_role for m in target):
+                    return True
+                else:
+                    raise NotAllowed(f"Your role is lower or equals to {[m.nick for m in target]}")
             else:
-                raise NotAllowed(f"Your role is lower or equals to {[m.nick for m in target]}")
-        if member.top_role > target.top_role:
-            return True
+                if all(member.top_role > m.top_role for m in target):
+                    return True
+                else:
+                    raise NotAllowed(f"Your role is lower or equals to {[m.nick for m in target]}")
         if fail:
             raise NotAllowed(f"Your role is lower or equals to {target}")
         else:
@@ -60,11 +65,10 @@ class Moderation(commands.Cog):
         self.check_state(ctx.author, member)
         message = await ctx.send(f"Are you sure you want to ban {member}?\n\nReason:\n{reason}")
         if await ctx.send_confirmation(message):
-            if isinstance(member, Iterable):
-                for m in member:
-                    await m.ban(reason=reason)
-                    user = self.bot.get_user(m.id)
-                    await user.send(f"You are banned from {ctx.guild}!\n\nReason:\n{reason}")
+            for m in member:
+                await m.ban(reason=reason)
+                user = self.bot.get_user(m.id)
+                await user.send(f"You are banned from {ctx.guild}!\n\nReason:\n{reason}")
                 return await ctx.send(f"Banned all {member}!")
             user = self.bot.get_user(member.id)
             await member.ban(reason=reason)
@@ -78,26 +82,20 @@ class Moderation(commands.Cog):
                    *, reason: Optional[str] = BASE_REASON
                    ) -> Optional[discord.Message]:
         """Change the nickname of member(s). You can provide multiple members too.
+
         There are 2 logics implemented here
-        1. If the member role's is higher than yours or you don't provide any members,
-        your **own** nickname will be changed to new_name.
+        1. If no member is provided, **your own** nickname will be changed.
         2. If no new_name is provided, the member or your nickname will be resetted."""
 
         if not ctx.author.guild_permissions.manage_nicknames and member:
             raise commands.MissingPermissions(missing_perms=("manage_nicknames",))
-        member: discord.Member = member or ctx.author
-        if self.check_state(ctx.author, member):
-            if isinstance(member, Iterable):
-                for m in member:
-                    await m.edit(nick=new_name, reason=reason)
-            else:
-                await member.edit(nick=new_name, reason=reason)
-        else:
-            member: discord.Member = ctx.author
-            await member[0].edit(nick=new_name, reason=reason)
+        member: List[discord.Member] = member or [ctx.author]
+        self.check_state(ctx.author, member, allow_equal=True)
+        for m in member:
+            await m.edit(nick=new_name, reason=reason)
         if new_name:
-            return await ctx.send(f"Changed nick of {[m.mention for m in member]} to {new_name}")
-        await ctx.send(f"Resetted nick of {[m.mention for m in member]}.")
+            return await ctx.send(f"Changed nick of {', '.join(m.mention for m in member)} to {new_name}")
+        await ctx.send(f"Resetted nick of {', '.join(m.mention for m in member)}.")
 
     @commands.command()
     @commands.has_permissions(manage_messages=True)
@@ -105,6 +103,8 @@ class Moderation(commands.Cog):
         """
         Purges x amount of message with a specific check if given.
         **All supported flags:**
+
+        Flag with value:
         `-user`: A mention or name of the user to remove.
         `-contains`: A substring to search for in the message.
         `-starts`: A substring to search if the message starts with.
