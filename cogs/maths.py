@@ -159,9 +159,8 @@ class Math(commands.Cog):
 
         __**Note:**__
         1. This only works with 3 **different** group (x^2, x, digit)
-        2. You need to simplify the equation, e.g `x + -x^2 + -8` becomes `x -x^2 -8`
-        3. This only works with equation resulted 0
-        4. Equation without result, the result will be considered as 0
+        2. This only works with equation resulted 0
+        3. Equation without result, the result will be considered as 0
         """
         equation = equation.replace(" ", "")
 
