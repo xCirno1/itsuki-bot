@@ -21,6 +21,9 @@ class Members(metaclass=EnumMeta, type="Member"):
     disboard = 302050872383242240
     arcane   = 437808476106784770
     anigame  = 571027211407196161
+    yuki     = 685763623221854258
+    kylee    = 650447110402998302
+    jack     = 369144046284701696
 
 
 class ClanOwners(metaclass=EnumMeta, type="Member"):
@@ -31,3 +34,13 @@ class ClanOwners(metaclass=EnumMeta, type="Member"):
 
 class Roles(metaclass=EnumMeta, type="Role"):
     clan_members = 832104392907554868
+
+
+class HistoryType:
+    donation     = "donation"
+    clan_invite  = "invite"
+    clan_kick    = "kick"
+    warning      = "warning"
+    clan_upgrade = "upgrade"
+    streak_lost  = "streak_lost"
+    reset        = "reset"
