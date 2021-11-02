@@ -1,6 +1,9 @@
 import discord
+import statistics
 
 from typing import Union, Callable, List, Dict
+
+newline = "\n"
 
 
 class Converter:
@@ -61,12 +64,13 @@ def is_dunder(obj: Union[str, Callable, object, type], _assert: bool = False) ->
     return stmt
 
 
-def ignore(*args, **kwargs) -> None:
+def ignore(*args, **kwargs) -> None: # noqa
     """Do nothing."""
     pass
 
 
 def massive_replace(_str: str, _dict: Dict[str, str]) -> str:
+    """Massive replace a string."""
     for k, v in _dict.items():
         _str = _str.replace(k, v)
     return _str
@@ -94,41 +98,23 @@ class Calculate:
         if not isinstance(data, List):
             self.data = replace_not_digit(data)
         else:
-            self.data = [int(e) for e in data]
+            self.data = [int(e) for e in replace_not_digit(data)]
         self.sorted = sorted(self.data)
 
     @property
     def mean(self) -> float:
-        return round(sum(int(s) for s in self.data)/len(self.data), 3)
+        return statistics.mean(self.data)
 
     @property
     def median(self) -> Union[float, int]:
-        sorted_data = sorted(self.data)
-        index = (len(sorted_data) + 1)//2
-
-        if len(sorted_data) % 2 == 0:
-            return (int(sorted_data[index - 1]) + int(sorted_data[index]))/2
-        return sorted_data[index - 1]
+        return statistics.median(self.data)
 
     @property
     def mode(self) -> int:
-        diff = set(self.data)
-        count = {}
-        for d in diff:
-            count[d] = 0
-        return max(set(self.data), key=self.data.count)
+        return statistics.mode(self.data)
 
     def quartil(self, n: int) -> Union[float, int]:
-        sorted_data = sorted(self.data)
-        if len(sorted_data) % 2 == 1:  # jumlah data ganjil
-            new = (sorted_data[:(len(sorted_data))//2] if n == 1 else sorted_data[(len(sorted_data) + 1)//2:])
-        else:  # jumlah data genap
-            new = sorted_data[:((len(sorted_data) + 1) // 2)] if n == 1 else sorted_data[((len(sorted_data) + 1)//2):]
-        index = (len(new) + 1)//2
-        if len(new) % 2 == 0:
-            return (int(new[index - 1]) + int(new[index - 0])) / 2
-
-        return new[index - 1]
+        return statistics.quantiles(self.data)[n - 1]
 
     @property
     def range(self) -> int:

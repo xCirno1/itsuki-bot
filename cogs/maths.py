@@ -50,12 +50,12 @@ class Math(commands.Cog):
         await ctx.send(str(calculate(problem)))
 
     @commands.command()
-    async def data(self, ctx, *datas):
+    async def data(self, ctx, *, datas):
         """Find attribute of datas.
         This includes:
             Sorted, Mean, Median, Mode, Range, Quartile-1 (below), Quartile-3 (above), Inter quartile Range
         """
-        c = Calculate(list(datas))
+        c = Calculate(datas)
         embed = discord.Embed(title="Calculation for your data", color=0xff6666)
         embed.add_field(name="Sorted", value=c.sorted)
         embed.add_field(name="Mean", value=str(c.mean))
@@ -191,7 +191,7 @@ class Math(commands.Cog):
             if not eq.startswith("-"):
                 eq = f"+{eq}"
 
-            order_by: dict = {"A": None, "B": None, "C": None}
+            order_by: dict = {"A": '0', "B": '0', "C": '0'}
             splitted = list(filter(lambda s: ' ' not in s and s, re.split(r"([-+\s])", eq)))
             for c, i in enumerate(splitted):
                 if i in ('-', '+'):
@@ -258,6 +258,7 @@ class Math(commands.Cog):
         result = parse_quadratic_equation(equation)
         await ctx.send(f"**Answer:** {str(result[0])}\n\n{result[1]}")
         # TODO: add fraction when result is not whole number
+
 
 def setup(bot):
     bot.add_cog(Math(bot))
