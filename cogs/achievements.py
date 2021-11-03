@@ -191,7 +191,7 @@ class Achievements(commands.Cog):
                         self.set_progress(message.mentions[0].id, "level_count", to)
 
 
-class AchievementCommand(commands.Cog):
+class AchievementCommand(commands.Cog, name="Achievement"):
     def __init__(self, bot):
         self.bot = bot
         self.main = Achievements()
@@ -239,12 +239,6 @@ class AchievementCommand(commands.Cog):
             f"```py\n{'▇' * (round(a[0]/_max * 20)) + '  ' * (round((_max - a[0])/_max * 20)) + '|' if isinstance(_max, int) else ''} {a[0]}/{_max}```"  # noqa
         embed.add_field(name="Progress: ", value=v)
         await ctx.reply(embed=embed)
-
-    @commands.command()
-    async def baninfo(self, ctx, member: discord.User):
-        for i in await ctx.guild.bans():
-            if i.user.id == member.id:
-                await ctx.send(f"{i.user}: {i.reason}")
 
 
 def setup(bot):
